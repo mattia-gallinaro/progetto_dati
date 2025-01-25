@@ -28,7 +28,7 @@ class SkipListPQ {
 
     private class Node{
         private MyEntry entry;
-        private Integer highet_level = 0;
+        private Integer highest_level = 0;
         private Node left;
         private Node up;
         private Node right ;
@@ -36,13 +36,13 @@ class SkipListPQ {
 
         public Node(Integer key, String value, Integer max_lvl){          
             entry =  new MyEntry(key, value); 
-            highet_level = max_lvl;  
+            highest_level = max_lvl;  
             left = null;
             up = null;
             right = null;
             down = null;
         }
-        public Integer get_maxlevel(){return highet_level;}
+        public Integer get_maxlevel(){return highest_level;}
         //public Integer get_KeyNode(){return entry.getKey();};
         public MyEntry get_Entry(){return entry;}
 
@@ -101,6 +101,41 @@ class SkipListPQ {
     public int insert(int key, String value) {
 	// TO BE COMPLETED 
         int level = generateEll(alpha, key);
+        Node[] flags = new Node[level];
+        Node current =  head;
+        Integer to_save =  level - top_level;
+        while(current != null){
+            while(current.get_rightNode().get_Entry().getKey() != null && current.get_rightNode().get_Entry().getKey() < key ){
+                current = current.get_rightNode();
+            }
+            if( to_save >= 0){
+                flags[to_save] = current;
+            }
+            to_save++;
+        }
+        
+        //significa che devo aggiungere altri livelli siccome 
+        //è stato estratto un livello troppo alto
+
+        if(level >= top_level){
+            Integer level_to_add = level - top_level;
+            Node end_sentinel = head.get_rightNode();
+            while(level_to_add >= 0){
+
+                top_level++;
+                head.set_upperNode(new Node(null, null, top_level));
+                end_sentinel.set_upperNode(new Node(null, null, top_level));
+                head.get_upperNode().set_bottomNode(head);
+                end_sentinel.get_upperNode().set_bottomNode(end_sentinel);
+                head = head.get_upperNode();
+                end_sentinel = end_sentinel.get_upperNode();
+                head.set_leftNode(end_sentinel);
+                end_sentinel.set_rightNode(head);
+                
+                level_to_add--;
+            }
+        }
+
         return level;
     }
 
