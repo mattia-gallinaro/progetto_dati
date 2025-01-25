@@ -43,7 +43,6 @@ class SkipListPQ {
             down = null;
         }
         public Integer get_maxlevel(){return highest_level;}
-        //public Integer get_KeyNode(){return entry.getKey();};
         public MyEntry get_Entry(){return entry;}
 
         public Node get_leftNode(){return left;}; 
@@ -99,7 +98,6 @@ class SkipListPQ {
     }
 
     public int insert(int key, String value) {
-	// TO BE COMPLETED 
         int level = generateEll(alpha, key);
         Node[] flags = new Node[level];
         Node current =  head;
@@ -112,6 +110,7 @@ class SkipListPQ {
                 flags[to_save] = current;
             }
             to_save++;
+            current =  current.get_bottomNode();
         }
         
         //significa che devo aggiungere altri livelli siccome 
@@ -133,7 +132,22 @@ class SkipListPQ {
                 end_sentinel.set_rightNode(head);
                 
                 level_to_add--;
+                if(level_to_add >= 0) flags[level_to_add] = head; 
             }
+        }
+
+        Node tmp = new Node(key , value, top_level);
+        tmp.set_leftNode(flags[flags.length - 1]);
+        tmp.set_rightNode(flags[flags.length - 1].get_rightNode());
+        flags[flags.length - 1].get_rightNode().set_leftNode(tmp);
+        flags[flags.length - 1].set_rightNode(tmp);
+        for(int i = flags.length - 2; i >= 0; i--){
+            tmp = new Node(key , value, top_level);
+            tmp.set_leftNode(flags[i]);
+            tmp.set_rightNode(flags[i].get_rightNode());
+            flags[i].get_rightNode().set_leftNode(tmp);
+            flags[i].set_rightNode(tmp);
+            tmp.set_bottomNode(flags[i].get_bottomNode().get_rightNode());
         }
 
         return level;
@@ -161,10 +175,10 @@ class SkipListPQ {
     // mi basta scendere completamente e poi rimuovo 
     // head.get_bottomNode().set_bottomNode(head.get_leftNode());
     Node currentNode = head;
+    if(top_level == 0) return null; // perchè ho solo la linea con le sentinalle
     while(currentNode.get_bottomNode() != null){
         currentNode = currentNode.get_bottomNode(); 
     }
-    if(currentNode.get_rightNode().get_Entry().getKey() == null) return currentNode.get_rightNode().get_Entry();
     currentNode.get_rightNode();
     return currentNode.get_Entry();
     }
