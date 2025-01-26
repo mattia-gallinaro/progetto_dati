@@ -71,18 +71,17 @@ class SkipListPQ {
         top_level = 0; // ho solo il livello con i nodi sentinella
     }
 
-    // Θ( n^2)
+    // Θ(n)
     public int size() {
-    // dato che nel livello più in alto non c'è un nodo allora scendo subito al nodo successivo
 	    int counter = 0;
-        Node current = head.get_bottomNode();
-        while(current != null && current.get_bottomNode() != null){
-            Node tmp = current.get_rightNode();
-            while(tmp != null && tmp.get_rightNode().get_Entry().getKey() != null){
-                tmp =  tmp.get_rightNode();
-                counter++;
-            }
+        Node current = head;
+        while(current.get_bottomNode() != null){
             current = current.get_bottomNode();
+        }
+        current = current.get_rightNode(); //lo sposto di uno a destra perchè nella prima colonna sono presenti le sentinelle
+        while(current.get_Entry().getKey() != null){
+            counter += current.get_maxlevel() + 1;
+            current = current.get_rightNode();
         }
         return counter;      
     }
@@ -171,26 +170,53 @@ class SkipListPQ {
 
 
     public MyEntry removeMin() {
-	// TO BE COMPLETED 
-    // mi basta scendere completamente e poi rimuovo 
-    // head.get_bottomNode().set_bottomNode(head.get_leftNode());
-    Node currentNode = head;
-    if(top_level == 0) return null; // perchè ho solo la linea con le sentinalle
-    while(currentNode.get_bottomNode() != null){
-        currentNode = currentNode.get_bottomNode(); 
-    }
-    currentNode.get_rightNode();
-    return currentNode.get_Entry();
+        Node currentNode = head;
+        if(top_level == 0) return null; // perchè ho solo la linea con le sentinalle
+        while(currentNode.get_bottomNode() != null){
+            currentNode = currentNode.get_bottomNode(); 
+        }
+        int level_node = currentNode.get_maxlevel();
+        MyEntry entry = currentNode.get_rightNode().get_Entry();
+        currentNode =  currentNode.get_rightNode();
+        Node tmp1, tmp2;
+        while(currentNode != null){
+            tmp1 = currentNode.get_rightNode();
+            tmp2 = currentNode.get_leftNode();
+            currentNode.get_leftNode().set_rightNode(tmp2);
+            currentNode.get_rightNode().set_leftNode(tmp1);
+        }
+        if(level_node >= (top_level - 1)){
+            Node end_sentinel = head.get_rightNode();
+            while((head.get_bottomNode() != null) && (head.get_bottomNode().get_rightNode() == end_sentinel.get_bottomNode())){
+                head = head.get_bottomNode();
+                end_sentinel = end_sentinel.get_bottomNode();
+                head.get_upperNode().set_bottomNode(null);
+                end_sentinel.get_upperNode().set_bottomNode(null);
+                head.set_upperNode(null);
+                end_sentinel.set_upperNode(null);
+                top_level--;
+            }
+        }
+        return entry;
+
     }
 
     public void print() {
-	Node currentNode = head;
-    String text = "";
-    while(currentNode.get_bottomNode() != null) currentNode = currentNode.get_bottomNode();
-    while(currentNode.get_rightNode() != null){
-        text += currentNode.get_Entry() + " " + currentNode.get_maxlevel() + 1 +",";
-    }
-    System.out.println(text);
+        
+        Node currentNode = head;
+        String text = "";
+    
+        while(currentNode.get_bottomNode() != null) currentNode = currentNode.get_bottomNode();
+    
+        currentNode = currentNode.get_rightNode();
+
+        while(currentNode.get_Entry().getKey() != null){ //continuo a fare il ciclo fino  a quando non trovo la sentinella che mi indica la fine del livello
+            text += currentNode.get_Entry() + " " + currentNode.get_maxlevel() + 1 +",";
+            currentNode = currentNode.get_rightNode();
+        }
+    
+        System.out.println(text);
+    
     }
 }
 
@@ -217,16 +243,18 @@ public class TestProgram {
 
                 switch (operation) {
                     case 0:
-			// TO BE COMPLETED 
+                        MyEntry entry = skipList.min();
+                        System.out.println(entry);
                         break;
                     case 1:
-			// TO BE COMPLETED 
+                        MyEntry result = skipList.removeMin();
+                        System.out.println(result); 
                         break;
                     case 2:
-			// TO BE COMPLETED 
+
                         break;
                     case 3:
-			// TO BE COMPLETED 
+                        skipList.print();
                         break;
                     default:
                         System.out.println("Invalid operation code");
