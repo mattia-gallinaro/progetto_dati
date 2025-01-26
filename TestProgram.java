@@ -241,13 +241,13 @@ class SkipListPQ {
     
         currentNode = currentNode.get_rightNode();
 
-        while(currentNode.get_rightNode().get_Entry().getKey() != null){ //continuo a fare il ciclo fino  a quando non trovo la sentinella che mi indica la fine del livello
+        while(currentNode.get_rightNode().get_Entry().getKey() != null){ //continuo a fare il ciclo fino  a quando non trovo il nodo prima della sentinella che mi indica la fine del livello
             text += currentNode.get_Entry() + " " + (currentNode.get_maxlevel() + 1) +",";
             currentNode = currentNode.get_rightNode();
         }
 
         text += currentNode.get_Entry() + " " + (currentNode.get_maxlevel() + 1);
-        
+
         System.out.println(text);
     
     }
