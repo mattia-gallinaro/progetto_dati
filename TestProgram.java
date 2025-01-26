@@ -68,10 +68,10 @@ class SkipListPQ {
         this.rand = new Random();
         head = new Node(null, null, 0);
         head.set_rightNode(new Node(null, null, 0)); // creo le prime due sentinelle   
+        head.get_rightNode().set_leftNode(head);
         top_level = 0; // ho solo il livello con i nodi sentinella
     }
 
-    // Θ(n)
     public int size() {
 	    int counter = 0;
         Node current = head;
@@ -80,13 +80,17 @@ class SkipListPQ {
         }
         current = current.get_rightNode(); //lo sposto di uno a destra perchè nella prima colonna sono presenti le sentinelle
         while(current.get_Entry().getKey() != null){
-            counter += current.get_maxlevel() + 1;
+            Node tmp = current;
+            while(tmp != null){
+                if(tmp != null)counter++;
+                tmp = tmp.get_upperNode();
+            }
             current = current.get_rightNode();
         }
         return counter;      
     }
 
-    // Θ(n) deve scendere di tutti i livelli per cui
+    // deve scendere di tutti i livelli
     // e appena arrivo al livello finale mi basta ritornare il la entry del nodo subito a destra
     public MyEntry min() {
 	    Node currentNode = head;
@@ -97,19 +101,22 @@ class SkipListPQ {
     }
 
     public int insert(int key, String value) {
+        int nodes_traversed = 1;
         int level = generateEll(alpha, key);
-        Node[] flags = new Node[level];
+        Node[] flags = new Node[level + 1];
         Node current =  head;
         Integer to_save =  level - top_level;
         while(current != null){
             while(current.get_rightNode().get_Entry().getKey() != null && current.get_rightNode().get_Entry().getKey() < key ){
                 current = current.get_rightNode();
+                nodes_traversed++;
             }
             if( to_save >= 0){
                 flags[to_save] = current;
             }
             to_save++;
             current =  current.get_bottomNode();
+            if(current != null) nodes_traversed++;
         }
         
         //significa che devo aggiungere altri livelli siccome 
@@ -127,29 +134,30 @@ class SkipListPQ {
                 end_sentinel.get_upperNode().set_bottomNode(end_sentinel);
                 head = head.get_upperNode();
                 end_sentinel = end_sentinel.get_upperNode();
-                head.set_leftNode(end_sentinel);
-                end_sentinel.set_rightNode(head);
+                head.set_rightNode(end_sentinel);
+                end_sentinel.set_leftNode(head);
                 
                 level_to_add--;
                 if(level_to_add >= 0) flags[level_to_add] = head; 
             }
         }
 
-        Node tmp = new Node(key , value, top_level);
+        Node tmp = new Node(key , value, level);
         tmp.set_leftNode(flags[flags.length - 1]);
         tmp.set_rightNode(flags[flags.length - 1].get_rightNode());
         flags[flags.length - 1].get_rightNode().set_leftNode(tmp);
         flags[flags.length - 1].set_rightNode(tmp);
         for(int i = flags.length - 2; i >= 0; i--){
-            tmp = new Node(key , value, top_level);
+            tmp = new Node(key , value, level);
             tmp.set_leftNode(flags[i]);
             tmp.set_rightNode(flags[i].get_rightNode());
             flags[i].get_rightNode().set_leftNode(tmp);
             flags[i].set_rightNode(tmp);
             tmp.set_bottomNode(flags[i].get_bottomNode().get_rightNode());
+            tmp.get_bottomNode().set_upperNode(tmp);
         }
 
-        return level;
+        return nodes_traversed;
     }
 
     private int generateEll(double alpha_ , int key) {
@@ -175,15 +183,16 @@ class SkipListPQ {
         while(currentNode.get_bottomNode() != null){
             currentNode = currentNode.get_bottomNode(); 
         }
-        int level_node = currentNode.get_maxlevel();
-        MyEntry entry = currentNode.get_rightNode().get_Entry();
         currentNode =  currentNode.get_rightNode();
+        MyEntry entry = currentNode.get_rightNode().get_Entry();
+        int level_node = currentNode.get_maxlevel();
         Node tmp1, tmp2;
         while(currentNode != null){
             tmp1 = currentNode.get_rightNode();
             tmp2 = currentNode.get_leftNode();
-            currentNode.get_leftNode().set_rightNode(tmp2);
-            currentNode.get_rightNode().set_leftNode(tmp1);
+            currentNode.get_leftNode().set_rightNode(tmp1);
+            currentNode.get_rightNode().set_leftNode(tmp2);
+            currentNode = currentNode.get_upperNode();
         }
         if(level_node >= (top_level - 1)){
             Node end_sentinel = head.get_rightNode();
@@ -211,7 +220,7 @@ class SkipListPQ {
         currentNode = currentNode.get_rightNode();
 
         while(currentNode.get_Entry().getKey() != null){ //continuo a fare il ciclo fino  a quando non trovo la sentinella che mi indica la fine del livello
-            text += currentNode.get_Entry() + " " + currentNode.get_maxlevel() + 1 +",";
+            text += currentNode.get_Entry() + " " + (currentNode.get_maxlevel() + 1) +",";
             currentNode = currentNode.get_rightNode();
         }
     
@@ -236,22 +245,22 @@ public class TestProgram {
             System.out.println(N + " " + alpha);
 
             SkipListPQ skipList = new SkipListPQ(alpha);
-
+            int nodes_traversed = 0;
+            int num_of_inserts = 0;
             for (int i = 0; i < N; i++) {
                 String[] line = br.readLine().split(" ");
                 int operation = Integer.parseInt(line[0]);
 
                 switch (operation) {
                     case 0:
-                        MyEntry entry = skipList.min();
-                        System.out.println(entry);
+                        System.out.println(skipList.min());
                         break;
                     case 1:
-                        MyEntry result = skipList.removeMin();
-                        System.out.println(result); 
+                        skipList.removeMin(); 
                         break;
                     case 2:
-
+                        nodes_traversed += skipList.insert(Integer.parseInt(line[1]), line[2]);
+                        num_of_inserts++;
                         break;
                     case 3:
                         skipList.print();
@@ -261,6 +270,7 @@ public class TestProgram {
                         return;
                 }
             }
+            System.out.println(alpha + " " + skipList.size() + " " + num_of_inserts + " " + ((double)nodes_traversed /(double)num_of_inserts));
         } catch (IOException e) {
             System.out.println("Error reading file: " + e.getMessage());
         }
