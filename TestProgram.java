@@ -80,11 +80,7 @@ class SkipListPQ {
         }
         current = current.get_rightNode(); //lo sposto di uno a destra perchè nella prima colonna sono presenti le sentinelle
         while(current.get_Entry().getKey() != null){
-            Node tmp = current;
-            while(tmp != null){
-                if(tmp != null)counter++;
-                tmp = tmp.get_upperNode();
-            }
+            if(current != null)counter++;
             current = current.get_rightNode();
         }
         return counter;      
