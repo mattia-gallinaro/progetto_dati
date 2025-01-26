@@ -94,7 +94,7 @@ class SkipListPQ {
     }
 
     // deve scendere di tutti i livelli
-    // e appena arrivo al livello finale mi basta ritornare il la entry del nodo subito a destra
+    // e appena raggiunge s0 , ritorna la entry del nodo subito a destra
     public MyEntry min() {
 	    Node currentNode = head;
         while(currentNode.get_bottomNode() != null){
@@ -103,6 +103,11 @@ class SkipListPQ {
         return currentNode.get_rightNode().get_Entry();  
     }
 
+    /*
+     * Genera fino a che livello i nodi devono essere creati
+     * poi cerca la posizione in cui dover inserire il nodo e nel mentre salva 
+     * i nodi ai quali viene aggiunto alla loro destra il nuovo nodo 
+     */
     public int insert(int key, String value) {
         int nodes_traversed = 0;
         int level = generateEll(alpha, key);
@@ -123,8 +128,7 @@ class SkipListPQ {
         }
         
         //significa che devo aggiungere altri livelli siccome 
-        //è stato estratto un livello troppo alto
-
+        //è stato estratto un livello più alto o uguale al numero di sequenze presenti ora
         if(level >= top_level){
             Integer level_to_add = level - top_level;
             Node end_sentinel = head.get_rightNode();
@@ -179,7 +183,12 @@ class SkipListPQ {
         return level;
     }
 
-
+    /*
+     * Controlla se c'è solo il livello con 2 sentinelle e se ce ne sono di più
+     * scende fino a s0 e prende il valore subito alla destra dell'ultima sentinella della prima colonna
+     * poi risale fino all'ultimo livello in cui è definito il valore minimo e se era presente nel penultimo livello 
+     * (quello prima del livello con solo le sentinelle) allora comincia ad eliminare sentinelle solo se non ci sono nodi tra le sentinelle
+     */
     public MyEntry removeMin() {
         Node currentNode = head;
         if(top_level == 0) return null; // perchè ho solo la linea con le sentinalle
@@ -187,17 +196,23 @@ class SkipListPQ {
             currentNode = currentNode.get_bottomNode(); 
         }
         currentNode =  currentNode.get_rightNode();
-        MyEntry entry = currentNode.get_rightNode().get_Entry();
-        int level_node = currentNode.get_maxlevel();
-        Node tmp1, tmp2;
+        MyEntry entry = currentNode.get_Entry();
+        Integer level_node = currentNode.get_maxlevel();
+        //Node tmp1, tmp2 ;
         while(currentNode != null){
-            tmp1 = currentNode.get_rightNode();
-            tmp2 = currentNode.get_leftNode();
-            currentNode.get_leftNode().set_rightNode(tmp1);
-            currentNode.get_rightNode().set_leftNode(tmp2);
+            //tmp1 = currentNode.get_rightNode();
+            //tmp2 = currentNode.get_leftNode();
+            
+            currentNode.get_rightNode().set_leftNode(currentNode.get_leftNode());
+            currentNode.get_leftNode().set_rightNode(currentNode.get_rightNode());
+            //tmp2.set_rightNode(tmp1);
+            //tmp1.set_leftNode(tmp2);
+            currentNode.set_rightNode(new Node(null, null, level_node));
+            currentNode.set_leftNode(new Node(null, null, level_node));
             currentNode = currentNode.get_upperNode();
+            if(currentNode != null ) currentNode.get_bottomNode().set_upperNode(new Node(null, null, level_node));
         }
-        if(level_node >= (top_level - 1)){
+        if(level_node == (top_level - 1)){
             Node end_sentinel = head.get_rightNode();
             while((head.get_bottomNode() != null) && (head.get_bottomNode().get_rightNode() == end_sentinel.get_bottomNode())){
                 head = head.get_bottomNode();
@@ -213,6 +228,10 @@ class SkipListPQ {
 
     }
 
+    /* 
+     * si porta fino ad s0 e per ogni nodo presente , 
+     * concatena l'entry in una stringa e poi stampa la stringa
+    */
     public void print() {
         
         Node currentNode = head;
@@ -222,11 +241,13 @@ class SkipListPQ {
     
         currentNode = currentNode.get_rightNode();
 
-        while(currentNode.get_Entry().getKey() != null){ //continuo a fare il ciclo fino  a quando non trovo la sentinella che mi indica la fine del livello
+        while(currentNode.get_rightNode().get_Entry().getKey() != null){ //continuo a fare il ciclo fino  a quando non trovo la sentinella che mi indica la fine del livello
             text += currentNode.get_Entry() + " " + (currentNode.get_maxlevel() + 1) +",";
             currentNode = currentNode.get_rightNode();
         }
-    
+
+        text += currentNode.get_Entry() + " " + (currentNode.get_maxlevel() + 1);
+        
         System.out.println(text);
     
     }
@@ -248,7 +269,7 @@ public class TestProgram {
             System.out.println(N + " " + alpha);
 
             SkipListPQ skipList = new SkipListPQ(alpha);
-            int nodes_traversed = 0;
+            long nodes_traversed = 0;
             int num_of_inserts = 0;
             for (int i = 0; i < N; i++) {
                 String[] line = br.readLine().split(" ");
