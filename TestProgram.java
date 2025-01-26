@@ -69,7 +69,14 @@ class SkipListPQ {
         head = new Node(null, null, 0);
         head.set_rightNode(new Node(null, null, 0)); // creo le prime due sentinelle   
         head.get_rightNode().set_leftNode(head);
-        top_level = 0; // ho solo il livello con i nodi sentinella
+        top_level = 1;
+        head.set_upperNode(new Node(null, null, top_level));
+        head.get_rightNode().set_upperNode(new Node(null, null, top_level));
+        head.get_upperNode().set_bottomNode(head);
+        head.get_rightNode().get_upperNode().set_bottomNode(head.get_rightNode());
+        head.get_upperNode().set_rightNode(head.get_rightNode().get_upperNode());
+        head = head.get_upperNode();
+        head.get_rightNode().set_leftNode(head);
     }
 
     public int size() {
