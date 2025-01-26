@@ -97,12 +97,13 @@ class SkipListPQ {
     }
 
     public int insert(int key, String value) {
-        int nodes_traversed = 1;
+        int nodes_traversed = 0;
         int level = generateEll(alpha, key);
         Node[] flags = new Node[level + 1];
         Node current =  head;
         Integer to_save =  level - top_level;
         while(current != null){
+            if(current != null) nodes_traversed++;
             while(current.get_rightNode().get_Entry().getKey() != null && current.get_rightNode().get_Entry().getKey() < key ){
                 current = current.get_rightNode();
                 nodes_traversed++;
@@ -112,7 +113,6 @@ class SkipListPQ {
             }
             to_save++;
             current =  current.get_bottomNode();
-            if(current != null) nodes_traversed++;
         }
         
         //significa che devo aggiungere altri livelli siccome 
